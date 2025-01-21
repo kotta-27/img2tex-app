@@ -5,6 +5,9 @@ interface LoginProps {
   onSuccess: () => void;
 }
 
+const id = import.meta.env.ID;
+const password = import.meta.env.PASS;
+
 const Login: React.FC<LoginProps> = ({ onSuccess }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -12,7 +15,7 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
 
   const handleLogin = () => {
     // For now, hardcoded credentials
-    if (userId === "watabe" && password === "quantum") {
+    if (userId === id && password === password) {
       setIsAuthenticated(true);
       onSuccess();
     } else {
@@ -43,7 +46,9 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
           />
         </div>
       </div>
-      <button className="login-button" onClick={handleLogin}>ログイン</button>
+      <button className="login-button" onClick={handleLogin}>
+        ログイン
+      </button>
     </div>
   );
 };
