@@ -1,70 +1,278 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+SC:wght@100..900&family=Noto+Sans+TC:wght@100..900&family=Noto+Serif+JP:wght@200..900&family=Press+Start+2P&display=swap');
+
+
 #root {
-  max-width: 1280px;
+  /* width: 2000px; */
+  width: 80%;
   height: 100vh; 
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0 2rem 0 2rem; 
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.equation-transcoder {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.file-input-container {
+  width: 40%;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+@media (max-width: 767px){
+ .file-input-container {
+  width: 100%;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+ }
 }
 
 .file-input {
-  font-size: 1rem;
+  width: 70%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.file-input::file-selector-button {
+  height: 45px;
+  padding: 5px 5px;
+  border-radius: 5px;  
+  will-change: filter;
+  transition: filter 300ms;
+  text-align: center; 
+  justify-content: center;  
+  margin-left: 10px;
+  color: white;
+}
+
+.file-input::file-selector-button:hover {
+  background-color: #929eab;
+}
+
+.file-input::file-selector-button:active {
+  transform: scale(0.95); 
+}
+
+.execute-button {
+  height: 45px;
+  font-size: 0.9rem;
+  color: white;
+  border-radius: 5px;
+  border: 2px solid #222;
+}
+
+.execute-button:hover {
+  border: 2px solid #6c9cd0;
+}
+
+.execute-button:focus {
+  outline: none; 
+}
+
+.execute-button:active {
+  transform: scale(0.95); 
 }
 
 .equation-container {
+  width: 90%;
   border: 1px solid #ccc;
-  padding: 15px;
-  margin-top: 10px;
+  padding: 5px 10px 10px 10px;
+  margin-top: 5px;
   margin-bottom: 10px;
   background-color: #f9f9f9;
   border-radius: 5px;
   color: #555;
 }
 
-.copy-button {
+.equation-text {
   margin-top: 10px;
-  background-color: #007bff;
-  color: white;
+  margin-bottom: 10px;  
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  position: relative;
+}
+
+.equation-text-label {
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  padding: 2px 10px;
+  background-color: #eee;
+  border-radius: 0 5px 0 5px;
+  font-size: 0.8em;
+  border: 1px solid #ccc;
+}
+
+.equation-text-main {
+  padding: 10px;
+}
+
+.rendered-equation {
+  overflow: auto;
+}
+
+.katex-display > .katex-tag {
+  display: none; /* 式番号を非表示 */
+}
+
+.progress-bar {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  width: 50%;
+  height: 10px; /* 固定の高さを設定 */
+  -webkit-appearance: none; /* Safari, Chrome */
+  appearance: none; /* 他のブラウザ */
+  background-color: transparent; /* 初期状態で透明 */
   border: none;
-  padding: 10px 20px;
+  border-radius: 5px;
+  overflow: hidden;
+  transition: background-color 0.5s ease; /* スムーズな変化 */
+}
+
+.progress-bar::-webkit-progress-bar {
+  background-color: #e0e0e0; /* プログレスバーの背景色 */
   border-radius: 5px;
 }
 
+.progress-bar::-webkit-progress-value {
+  background-color: #197fec; /* プログレスバーの値の色 */
+  transition: width 0.3s ease; /* なめらかなアニメーション */
+  border-radius: 5px;
+}
+
+.progress-bar::-moz-progress-bar {
+  background-color: #197fec;; /* Firefox用のプログレスバーの値の色 */
+  transition: width 0.3s ease;
+  border-radius: 5px;
+}
+
+.snackbar {
+  position: fixed;
+  width: 100%;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  z-index: 1000;
+  /* animation: slideIn 0.5s ease-out, fadeOut 0.3s 1.0sease-in; */
+  animation: slideInOut 4s cubic-bezier(0.4, 0, 0.4, 1);
+}
+
+@keyframes slideIn {
+  from {
+    top: -50px;
+  }
+  to {
+    top: 0;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideInOut {
+  0% {
+    top: -50px;
+    opacity: 0;
+  }
+  10% {
+    top: 0px; /* 表示位置 */
+    opacity: 1;
+  }
+  70% {
+    top: 0px;
+    opacity: 1;
+  }
+  90% {
+    top: 0px;
+    opacity: 0.5;
+  }
+  100% {
+    top: -50px; /* フェードアウト時に再び上に移動 */
+    opacity: 0;
+  }
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.copy-button {
+  height: 50px;
+  /* margin-top: 20px; */
+  margin-right: 10px;
+  border: 5px solid ;
+  /* background-color: #007bff; */
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;  
+  padding: 10px 20px;
+  border-radius: 8px;
+  outline: none;
+}
+
 .copy-button:hover {
-  background-color: #0056b3;
+  border: 5px solid #05ff8a;
+}
+
+.copy-button:focus {
+  outline: none; 
+}
+
+.copy-button:active {
+  transform: scale(0.95); 
+}
+
+.explanation-button {
+  height: 50px;
+  margin-right: 10px;
+  /* background-color: #007bff; */
+  border: 5px solid ;
+  font-size: 0.7rem;
+  color: white;
+  font-weight: bold;  
+  padding: 10px 20px;
+  border-radius: 8px;
+  outline: none;
+}
+
+.explanation-button:hover {
+  /* background-color: #47a24f; */
+  border: 5px solid #6c9cd0;
+}
+
+.explanation-button:focus {
+  outline: none; 
+}
+
+.explanation-button:active {
+  transform: scale(0.95); 
+}
+
+.explanation-text {
+  padding: 10px 20px;
 }

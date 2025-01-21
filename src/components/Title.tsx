@@ -1,7 +1,8 @@
 import React from "react";
+import "../styles/title-style.css";
 
 const Title = () => {
-  return <h1>LaTeX Equation Transcoder</h1>;
+  return <div className="title">Img2LaTeX Converter</div>;
 };
 
 export default Title;
