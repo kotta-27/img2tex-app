@@ -11,3 +11,18 @@
     text-decoration-color: rgba(190, 211, 243, 0.5);
     text-decoration-thickness: 2px;
 }
+
+@media (max-width: 767px){
+.title {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #c2c2c2;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding-top: 40px;
+    text-decoration: underline;
+    text-decoration-color: rgba(190, 211, 243, 0.5);
+    text-decoration-thickness: 2px;
+}
+}
