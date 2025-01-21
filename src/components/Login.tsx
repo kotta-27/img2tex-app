@@ -9,17 +9,26 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isButtonPushed, setIsButtonPushed] = useState(false);
+  const [message, setMessage] = useState("");
 
   const myId = import.meta.env.VITE_ID;
   const myPassword = import.meta.env.VITE_PASS;
 
   const handleLogin = () => {
     // For now, hardcoded credentials
+    if (isButtonPushed == false) {
+      setIsButtonPushed(true);
+    }
     if (userId === myId && password === myPassword) {
       setIsAuthenticated(true);
-      onSuccess();
+      setMessage("ログイン成功");
+      setTimeout(() => {
+        onSuccess();
+      }, 1500);
     } else {
-      alert("認証に失敗しました");
+      setIsAuthenticated(false);
+      setMessage("ユーザーIDまたはパスワードが違います");
     }
   };
 
@@ -46,6 +55,34 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+        </div>
+        <div
+          className={`message ${
+            isAuthenticated ? "success-message" : "error-message"
+          }`}
+        >
+          {isButtonPushed ? (
+            isAuthenticated ? (
+              <div>
+                <i
+                  className="fa-solid fa-circle-check"
+                  style={{ color: "#63E6BE" }}
+                ></i>
+                {"  " +message}
+              </div>
+            ) : (
+              <div>
+                <i
+                  className="fa-solid fa-circle-exclamation"
+                  style={{ color: "#FFA07A" }}
+                ></i>
+                {"  " + message}
+              </div>
+            )
+          ) : (
+            ""
+          )}
+          {/* {message} */}
         </div>
         <button className="login-button" onClick={handleLogin}>
           ログイン
