@@ -20,6 +20,7 @@ body{
 }
 
 .file-input-container {
+  color: #c2c2c2;
   width: 40%;
   margin-top: 20px;
   display: flex;
