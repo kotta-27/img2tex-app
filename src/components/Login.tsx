@@ -24,31 +24,33 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="login-container">
-      <h2>ログイン</h2>
-      <div className="login-input-container">
-        <div className="login-id-container">
-          <label>ユーザーID:</label>
-          <input
-            className="login-id-input"
-            type="text"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-          />
+    <div className="login-wrapper">
+      <div className="login-container">
+        <h3>ログイン</h3>
+        <div className="login-input-container">
+          <div className="login-id-container">
+            <div className="login-id-label">user ID:</div>
+            <input
+              className="login-id-input"
+              type="text"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+            />
+          </div>
+          <div className="login-pass-container">
+            <label className="login-id-label">Password:</label>
+            <input
+              className="login-pass-input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
         </div>
-        <div className="logion-pass-container">
-          <label>パスワード:</label>
-          <input
-            className="login-pass-input"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+        <button className="login-button" onClick={handleLogin}>
+          ログイン
+        </button>
       </div>
-      <button className="login-button" onClick={handleLogin}>
-        ログイン
-      </button>
     </div>
   );
 };

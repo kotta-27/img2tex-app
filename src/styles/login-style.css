@@ -1,8 +1,45 @@
+.login-wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #333;
+}
+
 .login-container {
+    width: 50%;
     display: flex;
     justify-content: center;
     align-items: center;    
     flex-direction: column;
+    color: white;
+    border: 1px solid #ddd;
+    padding: 30px;
+    border-radius: 10px;
+}
+
+.login-input-container{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+.login-id-container{
+    display: flex;
+    flex-direction: row;
+}
+
+.login-pass-container{
+    display: flex;
+    flex-direction: row;
+    margin-top: 10px;
+}
+
+.login-id-label, .login-pass-label{
+    width: 100px;
 }
 
 .login-id-input{
@@ -16,4 +53,17 @@
 .login-button{
     margin-top: 30px;
     font-size: 15px;
+    font-weight: bold;
+}
+
+.login-button:hover{
+    background-color: #bababa;
+}
+
+.login-button:active{
+    transform: scale(0.95);
+}
+
+.login-button:focus{
+    outline: none;
 }
