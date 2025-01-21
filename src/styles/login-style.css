@@ -18,6 +18,20 @@
     border-radius: 10px;
 }
 
+@media (max-width: 767px){
+ .login-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;    
+    flex-direction: column;
+    color: white;
+    border: 1px solid #ddd;
+    padding: 30px;
+    border-radius: 10px;
+ }
+}
+
 .login-input-container{
     width: 100%;
     display: flex;
