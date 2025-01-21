@@ -23,6 +23,7 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
     if (userId === myId && password === myPassword) {
       setIsAuthenticated(true);
       setMessage("ログイン成功");
+      localStorage.setItem("isLoggedIn", "true"); // Add this line
       setTimeout(() => {
         onSuccess();
       }, 1500);

@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+SC:wght@100..900&family=Noto+Sans+TC:wght@100..900&family=Noto+Serif+JP:wght@200..900&family=Press+Start+2P&display=swap');
+
+.logout-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 8px 16px;
+  background-color: rgba(255, 0, 0, 0.6);
+  font-size: 14px;
+  font-family: 'Noto Sans JP';
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background-color: #d32f2f;
+}
+
+.logout-button:active {
+  transform: scale(0.95);
+}

@@ -6,7 +6,7 @@ body{
 #root {
   /* width: 2000px; */
   width: 80%;
-  /* height: 100vh;  */
+  height: 120vh; 
   margin: 0 auto;
   padding: 0 2rem 4rem 2rem; 
   text-align: center;
