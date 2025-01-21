@@ -5,17 +5,17 @@ interface LoginProps {
   onSuccess: () => void;
 }
 
-const id = import.meta.env.ID;
-const password = import.meta.env.PASS;
-
 const Login: React.FC<LoginProps> = ({ onSuccess }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  const myId = import.meta.env.VITE_ID;
+  const myPassword = import.meta.env.VITE_PASS;
+
   const handleLogin = () => {
     // For now, hardcoded credentials
-    if (userId === id && password === password) {
+    if (userId === myId && password === myPassword) {
       setIsAuthenticated(true);
       onSuccess();
     } else {
