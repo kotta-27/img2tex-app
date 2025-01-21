@@ -6,7 +6,6 @@ const EquationTranscoder: React.FC = () => {
   const [image, setImage] = useState<File | null>(null);
   const [imageURL, setImageURL] = useState<string | null>(null);
   const [text, setText] = useState("");
-  const [inputText, setInputText] = useState("");
   const [progress, setProgress] = useState(0);
   const [renderedEquation, setRenderedEquation] = useState<string | null>(null);
   const [explanation, setExplanation] = useState<React.ReactNode[] | null>(
@@ -30,14 +29,6 @@ const EquationTranscoder: React.FC = () => {
       setRenderedEquation(null);
     }
   }, []);
-
-  useEffect(() => {
-    if (inputText) {
-      renderLatex(inputText);
-    } else {
-      setRenderedEquation(null);
-    }
-  }, [inputText, renderLatex]);
 
   const removeMarkdown = (text: string): string => {
     return text.replace(/```[a-z]*\n?/gi, "").replace(/```/g, "");
@@ -310,7 +301,7 @@ const EquationTranscoder: React.FC = () => {
         <progress className="progress-bar" style={{ opacity: 0 }} />
       )}
 
-      {(text || inputText) && (
+      {text && (
         <div className="equation-container">
           <h3>{image ? "認識された数式:" : "入力された数式:"}</h3>
           <div

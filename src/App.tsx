@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Title from './components/Title';
 import EquationTranscoder from './components/EquationTranscoder';
 import Login from './components/Login';
