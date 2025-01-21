@@ -12,6 +12,16 @@ body{
   text-align: center;
 }
 
+@media (max-width: 767px){
+#root {
+  width: 80%;
+  height: 180vh; 
+  margin: 0 auto;
+  padding: 0 2rem 4rem 2rem; 
+  text-align: center;
+}
+}
+
 .equation-transcoder {
   width: 100%;
   display: flex;
