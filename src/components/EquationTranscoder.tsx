@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 
@@ -15,20 +15,6 @@ const EquationTranscoder: React.FC = () => {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
-
-  const renderLatex = useCallback((latex: string) => {
-    try {
-      setRenderedEquation(
-        katex.renderToString(latex, {
-          displayMode: true,
-          output: "htmlAndMathml",
-        })
-      );
-    } catch (error: any) {
-      console.error("Failed to render LaTeX:", error);
-      setRenderedEquation(null);
-    }
-  }, []);
 
   const removeMarkdown = (text: string): string => {
     return text.replace(/```[a-z]*\n?/gi, "").replace(/```/g, "");
@@ -104,17 +90,19 @@ const EquationTranscoder: React.FC = () => {
             })
           );
         } else if (data.error) {
+          const errorMessage = data.error instanceof Error ? data.error.message : '不明なエラーが発生しました';
           setText(
             `データエラーが発生しました。もう一度お試しください。<br>
-            Error: ${data.error.message}`
+            Error: ${errorMessage}`
           );
         } else {
           setText("数式が見つかりませんでした。");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
         setText(
           `エラーが発生しました。もう一度お試しください。<br>
-          Error: ${error.message}`
+          ${errorMessage}`
         );
       } finally {
         setProgress(100);
@@ -125,7 +113,7 @@ const EquationTranscoder: React.FC = () => {
       }
     };
     reader.readAsDataURL(image);
-  }, [image, geminiApiKey]);
+  }, [image]);
 
   const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -234,8 +222,9 @@ const EquationTranscoder: React.FC = () => {
                 dangerouslySetInnerHTML={{ __html: renderedMath }}
               />
             );
-          } catch (e) {
-            console.error("Error rendering LaTeX", e);
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+            console.error("Error rendering LaTeX", errorMessage);
             parts.push(
               <span key={`latex-error-${match.index}`}>{match[0]}</span>
             ); // Fallback to raw LaTeX if rendering fails
@@ -260,10 +249,11 @@ const EquationTranscoder: React.FC = () => {
           <span key="no-explanation">説明が見つかりませんでした。</span>,
         ]);
       }
-    } catch (error: any) {
-      setExplanation([<span key="error">Error: {error.message}</span>]);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+      setExplanation([<span key="error">Error: {errorMessage}</span>]);
     }
-  }, [text, geminiApiKey]);
+  }, [text]);
 
   return (
     <div className="equation-transcoder" onPaste={handlePaste}>
@@ -287,7 +277,7 @@ const EquationTranscoder: React.FC = () => {
           onClick={handleClick}
           disabled={!image}
         >
-          変換
+          実行
         </button>
       </div>
       {progress > 0 ? (
