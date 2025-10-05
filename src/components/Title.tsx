@@ -1,4 +1,3 @@
-import React from "react";
 import "../styles/title-style.css";
 
 const Title = () => {

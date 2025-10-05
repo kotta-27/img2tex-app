@@ -318,7 +318,7 @@ const EquationTranscoder: React.FC = () => {
         // 既存のレンダリングされた数式を直接キャプチャ
         console.log('レンダリング要素:', renderedEquationElement);
         console.log('要素の内容:', renderedEquationElement?.innerHTML);
-        console.log('要素のサイズ:', renderedEquationElement?.offsetWidth, 'x', renderedEquationElement?.offsetHeight);
+        console.log('要素のサイズ:', (renderedEquationElement as HTMLElement)?.offsetWidth, 'x', (renderedEquationElement as HTMLElement)?.offsetHeight);
 
         // KaTeXの実際のコンテンツ領域を取得
         const katexElement = renderedEquationElement.querySelector('.katex-display') || renderedEquationElement.querySelector('.katex');
