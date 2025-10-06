@@ -105,6 +105,47 @@
     margin: 1rem 0;
 }
 
+.svg-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+.svg-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.toggle-label {
+    font-weight: bold;
+    color: #333;
+}
+
+.format-selector {
+    display: flex;
+    gap: 1rem;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    background-color: white;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.format-selector label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
 .explanation-container {
     margin-top: 1rem;
     padding: 1rem;

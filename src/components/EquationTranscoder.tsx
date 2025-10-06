@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import html2canvas from "html2canvas";
@@ -16,13 +16,66 @@ const EquationTranscoder: React.FC = () => {
 
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [svgCopyMode, setSvgCopyMode] = useState(false); // true: コピー, false: ダウンロード
+  const [imageFormat, setImageFormat] = useState<'png' | 'svg'>('png'); // 画像形式の選択
   const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   // Google GenAI SDKクライアントを初期化
   const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
+  // デバッグ用のuseEffect
+  useEffect(() => {
+    console.log('svgCopyModeが変更されました:', svgCopyMode);
+  }, [svgCopyMode]);
+
+  useEffect(() => {
+    console.log('imageFormatが変更されました:', imageFormat);
+  }, [imageFormat]);
+
   const removeMarkdown = (text: string): string => {
     return text.replace(/```[a-z]*\n?/gi, "").replace(/```/g, "");
+  };
+
+  // SVG文字列を生成する関数
+  const createSvgString = (targetElement: HTMLElement, katexStyles: string, width?: number, height?: number): string => {
+    const w = width || 800;
+    const h = height || 200;
+
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+        <defs>
+          <style>
+            ${katexStyles}
+            .katex {
+              font-size: 1.21em !important;
+              line-height: 1.2 !important;
+              font-family: KaTeX_Main, "Times New Roman", serif !important;
+              color: black !important;
+            }
+            .katex .base {
+              position: relative;
+              display: inline-block;
+            }
+            .katex .mord {
+              font-family: KaTeX_Math;
+              font-style: italic;
+            }
+            .katex .mathbf {
+              font-family: KaTeX_Main;
+              font-weight: bold;
+            }
+            .katex .boldsymbol {
+              font-family: KaTeX_Main;
+              font-weight: bold;
+            }
+          </style>
+        </defs>
+        <foreignObject x="0" y="0" width="${w}" height="${h}">
+          <div xmlns="http://www.w3.org/1999/xhtml" style="margin:0;padding:0;border:none;display:inline-block;">
+            ${targetElement.outerHTML}
+          </div>
+        </foreignObject>
+      </svg>
+    `;
   };
 
   const handleChange = useCallback(
@@ -293,95 +346,186 @@ const EquationTranscoder: React.FC = () => {
         })
         .join('\n');
 
-      const svgString = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200">
-          <defs>
-            <style>
-              ${katexStyles}
-              .katex {
-                font-size: 1.21em !important;
-                line-height: 1.2 !important;
-                font-family: KaTeX_Main, "Times New Roman", serif !important;
-                color: black !important;
-              }
-            </style>
-          </defs>
-          <foreignObject x="10" y="10" width="100%" height="100%">
-            <div xmlns="http://www.w3.org/1999/xhtml">
-              ${clonedElement.outerHTML}
-            </div>
-          </foreignObject>
-        </svg>
-      `;
+      // 数式の実際のサイズを取得
+      const katexElement = renderedEquationElement.querySelector('.katex-display') || renderedEquationElement.querySelector('.katex');
+      const rect = katexElement ? katexElement.getBoundingClientRect() : renderedEquationElement.getBoundingClientRect();
+      const contentWidth = Math.ceil(rect.width);
+      const contentHeight = Math.ceil(rect.height);
+
+      const svgString = createSvgString(clonedElement, katexStyles, contentWidth, contentHeight);
 
       if (svgCopyMode) {
-        // 既存のレンダリングされた数式を直接キャプチャ
-        console.log('レンダリング要素:', renderedEquationElement);
-        console.log('要素の内容:', renderedEquationElement?.innerHTML);
-        console.log('要素のサイズ:', (renderedEquationElement as HTMLElement)?.offsetWidth, 'x', (renderedEquationElement as HTMLElement)?.offsetHeight);
+        console.log('svgCopyMode:', svgCopyMode, 'imageFormat:', imageFormat);
+        console.log('imageFormat === "svg":', imageFormat === 'svg');
+        if (imageFormat === 'svg') {
+          console.log('SVG形式でコピーを開始');
+          // SVG形式でコピー（画像として）
+          try {
+            // 既存のレンダリングされた数式のHTMLを直接使用
+            const katexElement = renderedEquationElement.querySelector('.katex-display') || renderedEquationElement.querySelector('.katex');
+            const targetElement = katexElement || renderedEquationElement;
 
-        // KaTeXの実際のコンテンツ領域を取得
-        const katexElement = renderedEquationElement.querySelector('.katex-display') || renderedEquationElement.querySelector('.katex');
-        const rect = katexElement ? katexElement.getBoundingClientRect() : renderedEquationElement.getBoundingClientRect();
-        console.log('KaTeX要素の境界:', rect);
+            // 数式の実際のサイズを取得してSVGを生成
+            const svgKatexElement = renderedEquationElement.querySelector('.katex-display') || renderedEquationElement.querySelector('.katex');
+            const svgRect = svgKatexElement ? svgKatexElement.getBoundingClientRect() : renderedEquationElement.getBoundingClientRect();
+            const svgContentWidth = Math.ceil(svgRect.width);
+            const svgContentHeight = Math.ceil(svgRect.height);
 
-        // 数式の実際のコンテンツ領域だけをキャプチャ
-        const targetElement = katexElement || renderedEquationElement;
+            const embeddedSvgString = createSvgString(targetElement, katexStyles, svgContentWidth, svgContentHeight);
 
-        html2canvas(targetElement as HTMLElement, {
-          backgroundColor: null, // 透明背景
-          scale: 2, // 高品質な画像のためにスケールを上げる
-          logging: true, // デバッグ情報を有効化
-          useCORS: true,
-          allowTaint: true,
-          // 余白を削除するための設定
-          x: 0,
-          y: 0,
-          width: Math.ceil(rect.width) || 400,
-          height: Math.ceil(rect.height) || 100,
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: Math.ceil(rect.width) || 400,
-          windowHeight: Math.ceil(rect.height) || 100,
-          // 余白を削除
-          removeContainer: true,
-          foreignObjectRendering: false,
-          // キャンバスの余白を削除
-          onclone: (clonedDoc) => {
-            const clonedElement = clonedDoc.querySelector('.katex-display') || clonedDoc.querySelector('.katex');
-            if (clonedElement) {
-              // 余白を削除するスタイルを適用
-              (clonedElement as HTMLElement).style.margin = '0';
-              (clonedElement as HTMLElement).style.padding = '0';
-              (clonedElement as HTMLElement).style.border = 'none';
-              (clonedElement as HTMLElement).style.width = 'auto';
-              (clonedElement as HTMLElement).style.height = 'auto';
-              // KaTeXの余白を削除
-              (clonedElement as HTMLElement).style.display = 'inline-block';
-            }
-          }
-        }).then(canvas => {
-          console.log('Canvas生成成功:', canvas.width, 'x', canvas.height);
-          canvas.toBlob(async (blob) => {
-            if (blob) {
-              console.log('Blob生成成功:', blob.size, 'bytes');
-              try {
-                // クリップボードAPIの互換性チェック
-                if (navigator.clipboard && window.ClipboardItem) {
-                  await navigator.clipboard.write([
-                    new ClipboardItem({
-                      'image/png': blob
-                    })
-                  ]);
-                  console.log('クリップボードへの書き込み成功');
+            // SVG形式でも既存の数式要素を直接キャプチャ（高品質なPNGとして）
+            console.log('SVG形式でコピーを開始（高品質PNGとして）');
+            // 既存の数式要素を直接キャプチャ
+            const rect = svgKatexElement ? svgKatexElement.getBoundingClientRect() : renderedEquationElement.getBoundingClientRect();
+            const svgTargetElement = svgKatexElement || renderedEquationElement;
+
+            console.log('rect:', rect);
+            console.log('rect.width:', svgRect.width);
+            console.log('rect.height:', svgRect.height);
+
+            html2canvas(svgTargetElement as HTMLElement, {
+              backgroundColor: null,
+              scale: 3, // SVG形式ではより高品質に
+              logging: true,
+              useCORS: true,
+              allowTaint: true,
+              x: 0,
+              y: 0,
+              width: Math.ceil(rect.width) || 400,
+              height: Math.ceil(rect.height) || 100,
+              scrollX: 0,
+              scrollY: 0,
+              windowWidth: Math.ceil(rect.width) || 400,
+              windowHeight: Math.ceil(rect.height) || 100,
+              removeContainer: true,
+              foreignObjectRendering: false,
+              onclone: (clonedDoc) => {
+                const clonedElement = clonedDoc.querySelector('.katex-display') || clonedDoc.querySelector('.katex');
+                if (clonedElement) {
+                  (clonedElement as HTMLElement).style.margin = '0';
+                  (clonedElement as HTMLElement).style.padding = '0';
+                  (clonedElement as HTMLElement).style.border = 'none';
+                  (clonedElement as HTMLElement).style.width = 'auto';
+                  (clonedElement as HTMLElement).style.height = 'auto';
+                  (clonedElement as HTMLElement).style.display = 'inline-block';
+                }
+              }
+            }).then(canvas => {
+              console.log('Canvas生成成功:', canvas.width, 'x', canvas.height);
+              canvas.toBlob(async (blob) => {
+                if (blob) {
+                  console.log('Blob生成成功:', blob.size, 'bytes');
+                  try {
+                    if (navigator.clipboard && window.ClipboardItem) {
+                      await navigator.clipboard.write([
+                        new ClipboardItem({
+                          'image/png': blob
+                        })
+                      ]);
+                      console.log('SVG形式で高品質PNGをクリップボードにコピーしました');
+                      setSnackbarVisible(true);
+                      setTimeout(() => setSnackbarVisible(false), 3000);
+                    } else {
+                      await navigator.clipboard.writeText(embeddedSvgString);
+                      console.log('SVGをテキストとしてクリップボードにコピーしました');
+                      setSnackbarVisible(true);
+                      setTimeout(() => setSnackbarVisible(false), 3000);
+                    }
+                  } catch (err) {
+                    console.error('クリップボードへの書き込みに失敗:', err);
+                    await navigator.clipboard.writeText(embeddedSvgString);
+                    console.log('SVGをテキストとしてクリップボードにコピーしました');
+                    setSnackbarVisible(true);
+                    setTimeout(() => setSnackbarVisible(false), 3000);
+                  }
+                } else {
+                  console.error('Blob生成に失敗');
+                  await navigator.clipboard.writeText(embeddedSvgString);
+                  console.log('SVGをテキストとしてクリップボードにコピーしました');
                   setSnackbarVisible(true);
                   setTimeout(() => setSnackbarVisible(false), 3000);
-                } else {
-                  // フォールバック: 画像を新しいタブで開く
-                  const imageUrl = URL.createObjectURL(blob);
-                  const newWindow = window.open();
-                  if (newWindow) {
-                    newWindow.document.write(`
+                }
+              }, 'image/png');
+            }).catch(error => {
+              console.error('html2canvasの実行中にエラーが発生しました:', error);
+              navigator.clipboard.writeText(embeddedSvgString);
+              console.log('SVGをテキストとしてクリップボードにコピーしました');
+              setSnackbarVisible(true);
+              setTimeout(() => setSnackbarVisible(false), 3000);
+            });
+          } catch (err) {
+            console.error('SVGのクリップボードへのコピーに失敗:', err);
+            alert('SVGのクリップボードへのコピーに失敗しました。');
+          }
+        } else {
+          console.log('PNG形式でコピーを開始');
+          // PNG形式でコピー（既存のコード）
+          console.log('レンダリング要素:', renderedEquationElement);
+          console.log('要素の内容:', renderedEquationElement?.innerHTML);
+          console.log('要素のサイズ:', (renderedEquationElement as HTMLElement)?.offsetWidth, 'x', (renderedEquationElement as HTMLElement)?.offsetHeight);
+
+          // KaTeXの実際のコンテンツ領域を取得
+          const katexElement = renderedEquationElement.querySelector('.katex-display') || renderedEquationElement.querySelector('.katex');
+          const rect = katexElement ? katexElement.getBoundingClientRect() : renderedEquationElement.getBoundingClientRect();
+          console.log('KaTeX要素の境界:', rect);
+
+          // 数式の実際のコンテンツ領域だけをキャプチャ
+          const targetElement = katexElement || renderedEquationElement;
+
+          html2canvas(targetElement as HTMLElement, {
+            backgroundColor: null, // 透明背景
+            scale: 2, // 高品質な画像のためにスケールを上げる
+            logging: true, // デバッグ情報を有効化
+            useCORS: true,
+            allowTaint: true,
+            // 余白を削除するための設定
+            x: 0,
+            y: 0,
+            width: Math.ceil(rect.width) || 400,
+            height: Math.ceil(rect.height) || 100,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: Math.ceil(rect.width) || 400,
+            windowHeight: Math.ceil(rect.height) || 100,
+            // 余白を削除
+            removeContainer: true,
+            foreignObjectRendering: false,
+            // キャンバスの余白を削除
+            onclone: (clonedDoc) => {
+              const clonedElement = clonedDoc.querySelector('.katex-display') || clonedDoc.querySelector('.katex');
+              if (clonedElement) {
+                // 余白を削除するスタイルを適用
+                (clonedElement as HTMLElement).style.margin = '0';
+                (clonedElement as HTMLElement).style.padding = '0';
+                (clonedElement as HTMLElement).style.border = 'none';
+                (clonedElement as HTMLElement).style.width = 'auto';
+                (clonedElement as HTMLElement).style.height = 'auto';
+                // KaTeXの余白を削除
+                (clonedElement as HTMLElement).style.display = 'inline-block';
+              }
+            }
+          }).then(canvas => {
+            console.log('Canvas生成成功:', canvas.width, 'x', canvas.height);
+            canvas.toBlob(async (blob) => {
+              if (blob) {
+                console.log('Blob生成成功:', blob.size, 'bytes');
+                try {
+                  // クリップボードAPIの互換性チェック
+                  if (navigator.clipboard && window.ClipboardItem) {
+                    await navigator.clipboard.write([
+                      new ClipboardItem({
+                        'image/png': blob
+                      })
+                    ]);
+                    console.log('クリップボードへの書き込み成功');
+                    setSnackbarVisible(true);
+                    setTimeout(() => setSnackbarVisible(false), 3000);
+                  } else {
+                    // フォールバック: 画像を新しいタブで開く
+                    const imageUrl = URL.createObjectURL(blob);
+                    const newWindow = window.open();
+                    if (newWindow) {
+                      newWindow.document.write(`
                         <html>
                           <body style="margin:0; padding:20px; text-align:center;">
                             <h3>生成された数式画像</h3>
@@ -390,31 +534,32 @@ const EquationTranscoder: React.FC = () => {
                           </body>
                         </html>
                       `);
+                    }
+                    alert('クリップボードAPIが利用できません。新しいタブで画像を表示しました。右クリック→「画像をコピー」でクリップボードにコピーしてください。');
                   }
-                  alert('クリップボードAPIが利用できません。新しいタブで画像を表示しました。右クリック→「画像をコピー」でクリップボードにコピーしてください。');
+                } catch (err) {
+                  console.error('クリップボードへの書き込みに失敗:', err);
+                  // フォールバック: 画像をダウンロード
+                  const imageUrl = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = imageUrl;
+                  link.download = 'equation.png';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(imageUrl);
+                  alert('クリップボードへの書き込みに失敗しました。代わりに画像をダウンロードしました。');
                 }
-              } catch (err) {
-                console.error('クリップボードへの書き込みに失敗:', err);
-                // フォールバック: 画像をダウンロード
-                const imageUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = imageUrl;
-                link.download = 'equation.png';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(imageUrl);
-                alert('クリップボードへの書き込みに失敗しました。代わりに画像をダウンロードしました。');
+              } else {
+                console.error('Blob生成に失敗');
+                alert('画像の生成に失敗しました。');
               }
-            } else {
-              console.error('Blob生成に失敗');
-              alert('画像の生成に失敗しました。');
-            }
-          }, 'image/png');
-        }).catch(error => {
-          console.error('html2canvasの実行中にエラーが発生しました:', error);
-          alert('画像の生成中にエラーが発生しました。');
-        });
+            }, 'image/png');
+          }).catch(error => {
+            console.error('html2canvasの実行中にエラーが発生しました:', error);
+            alert('画像の生成中にエラーが発生しました。');
+          });
+        }
       } else {
         // ファイルとしてダウンロード
         const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
@@ -433,7 +578,7 @@ const EquationTranscoder: React.FC = () => {
       console.error('SVGの生成に失敗しました:', errorMessage);
       alert('SVGの生成に失敗しました');
     }
-  }, [text, svgCopyMode]);
+  }, [text, svgCopyMode, imageFormat]);
 
 
   return (
@@ -499,12 +644,48 @@ const EquationTranscoder: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={svgCopyMode}
-                  onChange={(e) => setSvgCopyMode(e.target.checked)}
+                  onChange={(e) => {
+                    console.log('チェックボックスがクリックされました:', e.target.checked);
+                    setSvgCopyMode(e.target.checked);
+                  }}
                 />
                 <span className="toggle-label">
-                  {svgCopyMode ? "クリップボードにコピー" : "ファイルとしてダウンロード"}
+                  {svgCopyMode ? "クリップボードにコピー!!! image.png" : "ファイルとしてダウンロード"}
                 </span>
               </label>
+              {svgCopyMode && (
+                <div className="format-selector">
+                  <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>
+                    デバッグ: svgCopyMode={svgCopyMode.toString()}, imageFormat={imageFormat}
+                  </div>
+                  <label>
+                    <input
+                      type="radio"
+                      name="imageFormat"
+                      value="png"
+                      checked={imageFormat === 'png'}
+                      onChange={(e) => {
+                        console.log('PNG形式が選択されました');
+                        setImageFormat(e.target.value as 'png' | 'svg');
+                      }}
+                    />
+                    PNG画像
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="imageFormat"
+                      value="svg"
+                      checked={imageFormat === 'svg'}
+                      onChange={(e) => {
+                        console.log('SVG形式が選択されました');
+                        setImageFormat(e.target.value as 'png' | 'svg');
+                      }}
+                    />
+                    SVG
+                  </label>
+                </div>
+              )}
               <button className="download-button" onClick={handleSVGAction}>
                 {svgCopyMode ? "画像をコピー" : "画像をダウンロード"}
               </button>
