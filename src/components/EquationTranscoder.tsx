@@ -375,43 +375,168 @@ const EquationTranscoder: React.FC = () => {
 
             // SVG形式でも既存の数式要素を直接キャプチャ（高品質なPNGとして）
             console.log('SVG形式でコピーを開始（高品質PNGとして）');
-            // 既存の数式要素を直接キャプチャ
-            const rect = svgKatexElement ? svgKatexElement.getBoundingClientRect() : renderedEquationElement.getBoundingClientRect();
+
+            // 数式の実際のコンテンツ幅を精密に計算（スタイルは保持）
+            const getContentWidth = (element: HTMLElement) => {
+              // より包括的なセレクタで数式内のすべての要素を取得
+              const textNodes = element.querySelectorAll('span, .mord, .mrel, .mbin, .mopen, .mclose, .mpunct, .mfrac, .msup, .msub, .mfrac-num, .mfrac-den, .vlist-r, .vlist-s, .vlist-t, .mspace, .mtable, .mtr, .mtd');
+              let minX = Infinity, maxX = -Infinity;
+              let hasValidNodes = false;
+
+              console.log('検出された要素数:', textNodes.length);
+
+              textNodes.forEach((node, index) => {
+                const rect = node.getBoundingClientRect();
+                const textContent = node.textContent?.trim();
+
+                // 有効なテキストコンテンツを持つ要素のみを対象
+                if (rect.width > 0 && rect.height > 0 && textContent && textContent.length > 0) {
+                  minX = Math.min(minX, rect.left);
+                  maxX = Math.max(maxX, rect.right);
+                  hasValidNodes = true;
+
+                  if (index < 5) { // 最初の5要素をログ出力
+                    console.log(`要素${index}:`, textContent, 'rect:', rect);
+                  }
+                }
+              });
+
+              if (!hasValidNodes) {
+                console.warn('有効なテキスト要素が見つかりませんでした');
+                return Math.ceil(element.getBoundingClientRect().width);
+              }
+
+              const contentWidth = Math.ceil(maxX - minX);
+              console.log('計算された境界:', { minX, maxX, contentWidth });
+
+              return contentWidth;
+            };
+
             const svgTargetElement = svgKatexElement || renderedEquationElement;
+            const contentWidth = getContentWidth(svgTargetElement as HTMLElement);
+            const originalRect = svgKatexElement ? svgKatexElement.getBoundingClientRect() : renderedEquationElement.getBoundingClientRect();
 
-            console.log('rect:', rect);
-            console.log('rect.width:', svgRect.width);
-            console.log('rect.height:', svgRect.height);
+            // より確実な方法：数式の実際の描画領域を取得
+            const getActualContentWidth = (element: HTMLElement) => {
+              // 数式の実際の描画領域を取得するため、より精密な方法を使用
+              const getTextBounds = (el: HTMLElement) => {
+                const range = document.createRange();
+                const walker = document.createTreeWalker(
+                  el,
+                  NodeFilter.SHOW_TEXT,
+                  null
+                );
 
-            html2canvas(svgTargetElement as HTMLElement, {
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                let node;
+
+                while (node = walker.nextNode()) {
+                  if (node.textContent?.trim()) {
+                    range.selectNode(node);
+                    const rect = range.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                      minX = Math.min(minX, rect.left);
+                      maxX = Math.max(maxX, rect.right);
+                      minY = Math.min(minY, rect.top);
+                      maxY = Math.max(maxY, rect.bottom);
+                    }
+                  }
+                }
+
+                return { minX, maxX, minY, maxY };
+              };
+
+              const bounds = getTextBounds(element);
+              const elementRect = element.getBoundingClientRect();
+
+              // 要素の基準点からの相対位置を計算
+              const relativeMinX = bounds.minX - elementRect.left;
+              const relativeMaxX = bounds.maxX - elementRect.left;
+              const actualWidth = Math.ceil(relativeMaxX - relativeMinX);
+
+              console.log('テキスト境界:', bounds);
+              console.log('要素境界:', elementRect);
+              console.log('相対位置:', { relativeMinX, relativeMaxX });
+              console.log('実際の幅:', actualWidth);
+
+              return actualWidth;
+            };
+
+            const actualWidth = getActualContentWidth(svgTargetElement as HTMLElement);
+
+            console.log('元の幅:', originalRect.width);
+            console.log('精密な幅:', contentWidth);
+            console.log('実際の幅:', actualWidth);
+            console.log('幅の差:', originalRect.width - actualWidth);
+
+            // より精密なキャプチャのために、一時的なコンテナを作成
+            const tempContainer = document.createElement('div');
+            tempContainer.style.position = 'absolute';
+            tempContainer.style.left = '-9999px';
+            tempContainer.style.top = '-9999px';
+            tempContainer.style.width = `${actualWidth}px`;
+            tempContainer.style.height = `${Math.ceil(originalRect.height)}px`;
+            tempContainer.style.overflow = 'hidden';
+            tempContainer.style.margin = '0';
+            tempContainer.style.padding = '0';
+            tempContainer.style.border = 'none';
+
+            // 数式をクローンして一時コンテナに配置
+            const clonedKatex = svgTargetElement.cloneNode(true) as HTMLElement;
+            clonedKatex.style.margin = '0';
+            clonedKatex.style.padding = '0';
+            clonedKatex.style.border = 'none';
+            clonedKatex.style.width = `${actualWidth}px`;
+            clonedKatex.style.height = 'auto';
+            clonedKatex.style.display = 'inline-block';
+            clonedKatex.style.overflow = 'hidden';
+
+            tempContainer.appendChild(clonedKatex);
+            document.body.appendChild(tempContainer);
+
+            html2canvas(tempContainer, {
               backgroundColor: null,
-              scale: 3, // SVG形式ではより高品質に
+              scale: 3,
               logging: true,
               useCORS: true,
               allowTaint: true,
               x: 0,
               y: 0,
-              width: Math.ceil(rect.width) || 400,
-              height: Math.ceil(rect.height) || 100,
+              width: actualWidth,
+              height: Math.ceil(originalRect.height),
               scrollX: 0,
               scrollY: 0,
-              windowWidth: Math.ceil(rect.width) || 400,
-              windowHeight: Math.ceil(rect.height) || 100,
-              removeContainer: true,
+              windowWidth: actualWidth,
+              windowHeight: Math.ceil(originalRect.height),
+              removeContainer: false,
               foreignObjectRendering: false,
               onclone: (clonedDoc) => {
-                const clonedElement = clonedDoc.querySelector('.katex-display') || clonedDoc.querySelector('.katex');
-                if (clonedElement) {
-                  (clonedElement as HTMLElement).style.margin = '0';
-                  (clonedElement as HTMLElement).style.padding = '0';
-                  (clonedElement as HTMLElement).style.border = 'none';
-                  (clonedElement as HTMLElement).style.width = 'auto';
-                  (clonedElement as HTMLElement).style.height = 'auto';
-                  (clonedElement as HTMLElement).style.display = 'inline-block';
+                const clonedContainer = clonedDoc.querySelector('div');
+                if (clonedContainer) {
+                  clonedContainer.style.margin = '0';
+                  clonedContainer.style.padding = '0';
+                  clonedContainer.style.border = 'none';
+                  clonedContainer.style.overflow = 'hidden';
+                }
+
+                const clonedKatexInClone = clonedDoc.querySelector('.katex-display') || clonedDoc.querySelector('.katex');
+                if (clonedKatexInClone) {
+                  (clonedKatexInClone as HTMLElement).style.margin = '0';
+                  (clonedKatexInClone as HTMLElement).style.padding = '0';
+                  (clonedKatexInClone as HTMLElement).style.border = 'none';
+                  (clonedKatexInClone as HTMLElement).style.width = `${actualWidth}px`;
+                  (clonedKatexInClone as HTMLElement).style.height = 'auto';
+                  (clonedKatexInClone as HTMLElement).style.display = 'inline-block';
+                  (clonedKatexInClone as HTMLElement).style.overflow = 'hidden';
                 }
               }
             }).then(canvas => {
               console.log('Canvas生成成功:', canvas.width, 'x', canvas.height);
+              // 一時コンテナを削除
+              if (document.body.contains(tempContainer)) {
+                document.body.removeChild(tempContainer);
+              }
+
               canvas.toBlob(async (blob) => {
                 if (blob) {
                   console.log('Blob生成成功:', blob.size, 'bytes');
@@ -448,6 +573,10 @@ const EquationTranscoder: React.FC = () => {
               }, 'image/png');
             }).catch(error => {
               console.error('html2canvasの実行中にエラーが発生しました:', error);
+              // 一時コンテナを削除
+              if (document.body.contains(tempContainer)) {
+                document.body.removeChild(tempContainer);
+              }
               navigator.clipboard.writeText(embeddedSvgString);
               console.log('SVGをテキストとしてクリップボードにコピーしました');
               setSnackbarVisible(true);
